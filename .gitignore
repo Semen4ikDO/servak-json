@@ -1,25 +1,46 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+package main
 
-# Test binary, built with `go test -c`
-*.test
+import (
+	"github.com/labstack/echo/v4"
+	"net/http"
+)
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+type Messege struct {
+	Text string `json:"text"`
+}
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+type Responce struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
 
-# Go workspace file
-go.work
-go.work.sum
+var messages []Messege
 
-# env file
-.env
+func GetHAndler(c echo.Context) error {
+	return c.JSON(http.StatusOK, &messages)
+}
+
+func PostHandler(c echo.Context) error {
+	var message Messege
+	if err := c.Bind(&message); err != nil {
+		return c.JSON(http.StatusBadRequest, Responce{
+			Status:  "Error",
+			Message: "Сообщение не добавлено",
+		})
+	}
+	messages = append(messages, message)
+	return c.JSON(http.StatusOK, Responce{
+		Status:  "Succeed",
+		Message: "Добавлено",
+	})
+}
+
+func main() {
+	e := echo.New()
+
+	e.GET("/messages", GetHAndler)
+	e.POST("/messages", PostHandler)
+
+	e.Start(":8080")
+}
+
